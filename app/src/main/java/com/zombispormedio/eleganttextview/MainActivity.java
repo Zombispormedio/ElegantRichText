@@ -14,8 +14,6 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ElegantTextView textView;
-
     private String[] myStyle=new String[]{ElegantUtils.Style.foregroundColor("#8E24AA")};
 
     @Override
@@ -23,13 +21,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView= (ElegantTextView) findViewById(R.id.text);
+        ElegantUtils.StyleCompound compound=new ElegantUtils.StyleCompound()
+                .addStyles(myStyle)
+                .addGlobalStyles(ElegantUtils.Style.TEXT_CENTER);
 
-        textView.bind("name", "Xavier", myStyle)
+        ElegantTextView textView = (ElegantTextView) findViewById(R.id.text);
+
+        textView.bind("name", "Xavier")
+                .compose(compound)
                 .bind("specie", "Elefante", ElegantUtils.Style.backgroundColor("#8E24AA"), ElegantUtils.Style.foregroundColor("#ECEFF1"))
-                .addGlobal(ElegantUtils.Style.BOLD, ElegantUtils.Style.TEXT_CENTER)
+                .addGlobal(ElegantUtils.Style.BOLD)
                 .apply();
 
+        ((ElegantTextView) findViewById(R.id.text2))
+                .compose(compound)
+                .bindingPoints("[", "]")
+                .bind("name", "3")
+                .apply();
         
 
 

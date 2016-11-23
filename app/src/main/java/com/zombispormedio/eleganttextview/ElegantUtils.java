@@ -129,5 +129,17 @@ public class ElegantUtils {
             customStyles.put(key, new ArgsFilter(fn));
             return this;
         }
+
+        public HashSet<String> getStyles() {
+            return styles;
+        }
+
+        public HashSet<String> getGlobalStyles() {
+            return globalStyles;
+        }
+
+        public LinkedHashMap<String, AbstractFilter> getCustomStyles() {
+            return customStyles;
+        }
     }
 }

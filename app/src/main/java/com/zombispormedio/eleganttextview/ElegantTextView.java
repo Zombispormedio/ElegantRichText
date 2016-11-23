@@ -25,13 +25,14 @@ import java.util.List;
 public class ElegantTextView extends TextView implements StyleContext {
 
 
-
     private String mTemplate;
 
-    private String startPoint="{";
-    private String endPoint="}";
+    private String startPoint = "{";
+    private String endPoint = "}";
 
     private LinkedHashMap<String, StyleableValue> values;
+
+    private HashSet<String> filtersToCompoundInValues;
 
     private LinkedHashMap<String, ElegantUtils.AbstractFilter> filters;
 
@@ -45,7 +46,9 @@ public class ElegantTextView extends TextView implements StyleContext {
 
         filters = new LinkedHashMap<>();
 
-        globals=new HashSet<>();
+        globals = new HashSet<>();
+
+        filtersToCompoundInValues = new HashSet<>();
 
         configureDefaultFilters();
 
@@ -135,22 +138,29 @@ public class ElegantTextView extends TextView implements StyleContext {
         return this;
     }
 
-    public ElegantTextView addGlobal(String... keys){
+    public ElegantTextView addGlobal(String... keys) {
         Collections.addAll(globals, keys);
         return this;
     }
 
-    public ElegantTextView removeBindingValue(String key){
+    public ElegantTextView compose(ElegantUtils.StyleCompound compound) {
+        filtersToCompoundInValues.addAll(compound.getStyles());
+        globals.addAll(compound.getGlobalStyles());
+        filters.putAll(compound.getCustomStyles());
+        return this;
+    }
+
+    public ElegantTextView removeBindingValue(String key) {
         values.remove(key);
         return this;
     }
 
-    public ElegantTextView removeFilter(String key){
+    public ElegantTextView removeFilter(String key) {
         filters.remove(key);
         return this;
     }
 
-    public ElegantTextView removeGlobal(String key){
+    public ElegantTextView removeGlobal(String key) {
         globals.remove(key);
         return this;
     }
@@ -163,14 +173,14 @@ public class ElegantTextView extends TextView implements StyleContext {
 
 
     public ElegantTextView apply() {
-        if(mTemplate.isEmpty())return this;
+        if (mTemplate.isEmpty()) return this;
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
         builder.append(mTemplate);
 
         builder = buildBinding(builder);
 
-        builder=buildGlobal(builder);
+        builder = buildGlobal(builder);
 
         setText(builder, BufferType.SPANNABLE);
         return this;
@@ -178,9 +188,9 @@ public class ElegantTextView extends TextView implements StyleContext {
     }
 
     private SpannableStringBuilder buildGlobal(SpannableStringBuilder builder) {
-        SpannableStringBuilder newBuilder=new SpannableStringBuilder();
+        SpannableStringBuilder newBuilder = new SpannableStringBuilder();
 
-        CharSequence result=Stream.of(globals).reduce(builder, this::applyFilter);
+        CharSequence result = Stream.of(globals).reduce(builder, this::applyFilter);
 
         newBuilder.append(result);
 
@@ -188,17 +198,19 @@ public class ElegantTextView extends TextView implements StyleContext {
     }
 
     private SpannableStringBuilder buildBinding(SpannableStringBuilder builder) {
-       return Stream.of(values).reduce(builder, (memo, entry) -> {
+        return Stream.of(values).reduce(builder, (memo, entry) -> {
 
             String key = entry.getKey();
+            StyleableValue styleableValue = entry.getValue();
+            styleableValue.addStyle(filtersToCompoundInValues);
 
-            CharSequence value = entry.getValue().applyFilters(this);
+            CharSequence value = styleableValue.applyFilters(this);
 
             String pattern = buildBindingPattern(key);
 
             int start = mTemplate.indexOf(pattern);
 
-            if(start==-1)return memo;
+            if (start == -1) return memo;
 
             int end = start + pattern.length();
 
@@ -207,33 +219,33 @@ public class ElegantTextView extends TextView implements StyleContext {
     }
 
     private String buildBindingPattern(String key) {
-        return startPoint+key+endPoint;
+        return startPoint + key + endPoint;
     }
 
 
     @Override
     public SpannableString applyFilter(CharSequence value, String key) {
-        String realKey=key;
-        SpannableString result=new SpannableString(value);
+        String realKey = key;
+        SpannableString result = new SpannableString(value);
 
-        ArrayList<String> args=new ArrayList<>();
-        if(key.contains(":")){
-            String[] elems=key.split(":");
-            realKey=elems[0];
+        ArrayList<String> args = new ArrayList<>();
+        if (key.contains(":")) {
+            String[] elems = key.split(":");
+            realKey = elems[0];
             Collections.addAll(args, elems[1].split(","));
         }
-        
-        if(filters.containsKey(realKey)){
-            ElegantUtils.AbstractFilter filter=filters.get(realKey);
 
-            if(args.size()>0 && filter instanceof ElegantUtils.ArgsFilter){
+        if (filters.containsKey(realKey)) {
+            ElegantUtils.AbstractFilter filter = filters.get(realKey);
 
-                result=((ElegantUtils.ArgsFilter)filter)
+            if (args.size() > 0 && filter instanceof ElegantUtils.ArgsFilter) {
+
+                result = ((ElegantUtils.ArgsFilter) filter)
                         .getFunction()
                         .apply(result, args);
-            }else{
-                if(filter instanceof ElegantUtils.Filter){
-                    result=((ElegantUtils.Filter)filter).getFunction().apply(result);
+            } else {
+                if (filter instanceof ElegantUtils.Filter) {
+                    result = ((ElegantUtils.Filter) filter).getFunction().apply(result);
                 }
             }
         }

@@ -32,6 +32,10 @@ public class StyleableValue {
         Collections.addAll(styles, s);
     }
 
+    public void addStyle(HashSet<String> s){
+        styles.addAll(s);
+    }
+
     public CharSequence getValue() {
         return value;
     }
