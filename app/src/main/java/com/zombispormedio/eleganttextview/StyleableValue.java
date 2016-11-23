@@ -3,6 +3,7 @@ package com.zombispormedio.eleganttextview;
 import android.text.SpannableString;
 
 import com.annimon.stream.Stream;
+import com.annimon.stream.function.Predicate;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,6 +18,8 @@ public class StyleableValue {
     private SpannableString value;
 
     private Set<String> styles;
+
+    private Predicate<SpannableString> onClick;
 
     public StyleableValue() {
         this.styles=new HashSet<>();
@@ -50,5 +53,9 @@ public class StyleableValue {
 
     public SpannableString applyFilters(StyleContext ctx){
         return Stream.of(styles).reduce(value, ctx::applyFilter);
+    }
+
+    public StyleableValue(Predicate<SpannableString> onClick) {
+        this.onClick = onClick;
     }
 }
