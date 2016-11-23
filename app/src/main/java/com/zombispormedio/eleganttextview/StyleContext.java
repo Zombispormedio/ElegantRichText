@@ -1,5 +1,7 @@
 package com.zombispormedio.eleganttextview;
 
+import android.text.SpannableString;
+
 import java.util.function.Function;
 
 /**
@@ -8,5 +10,5 @@ import java.util.function.Function;
 
 public interface StyleContext {
 
-    CharSequence applyFilter(String key, CharSequence value);
+    SpannableString applyFilter(CharSequence value, String key);
 }

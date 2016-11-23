@@ -1,5 +1,7 @@
 package com.zombispormedio.eleganttextview;
 
+import android.text.SpannableString;
+
 import com.annimon.stream.Stream;
 
 import java.util.Collections;
@@ -12,17 +14,17 @@ import java.util.Set;
 
 public class StyleableValue {
 
-    private CharSequence value;
+    private SpannableString value;
 
     private Set<String> styles;
 
     public StyleableValue() {
         this.styles=new HashSet<>();
-        this.value="";
+        this.value=new SpannableString("");
     }
 
     public StyleableValue(CharSequence value) {
-        this.value = value;
+        this.value = new SpannableString(value);
         this.styles=new HashSet<>();
     }
 
@@ -39,10 +41,10 @@ public class StyleableValue {
     }
 
     public void setValue(CharSequence value) {
-        this.value = value;
+        this.value = new SpannableString(value);
     }
 
-    public CharSequence applyFilters(StyleContext ctx){
-        return Stream.of(styles).reduce(value, (memo, keyStyle) -> ctx.applyFilter(keyStyle, memo));
+    public SpannableString applyFilters(StyleContext ctx){
+        return Stream.of(styles).reduce(value, ctx::applyFilter);
     }
 }

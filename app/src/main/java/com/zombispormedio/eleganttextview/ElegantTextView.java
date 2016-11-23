@@ -2,6 +2,7 @@ package com.zombispormedio.eleganttextview;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 import android.widget.TextView;
@@ -12,6 +13,7 @@ import com.annimon.stream.function.Function;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -26,11 +28,14 @@ public class ElegantTextView extends TextView implements StyleContext {
 
     private String mTemplate;
 
+    private String startPoint="{";
+    private String endPoint="}";
+
     private LinkedHashMap<String, StyleableValue> values;
 
     private LinkedHashMap<String, ElegantUtils.AbstractFilter> filters;
 
-    private ArrayList<String> globals;
+    private HashSet<String> globals;
 
     public ElegantTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -40,7 +45,7 @@ public class ElegantTextView extends TextView implements StyleContext {
 
         filters = new LinkedHashMap<>();
 
-        globals=new ArrayList<>();
+        globals=new HashSet<>();
 
         configureDefaultFilters();
 
@@ -48,7 +53,10 @@ public class ElegantTextView extends TextView implements StyleContext {
 
     private void configureDefaultFilters() {
         filter(ElegantUtils.Style.BOLD, ElegantUtils::bold);
-        filter(ElegantUtils.Style.COLOR, ElegantUtils::foregroundColor);
+        filter(ElegantUtils.Style.FOREGROUND_COLOR, ElegantUtils::foregroundColor);
+        filter(ElegantUtils.Style.BACKGROUND_COLOR, ElegantUtils::backgroundColor);
+
+        filter(ElegantUtils.Style.TEXT_CENTER, ElegantUtils::centerText);
     }
 
     private void obtainAttributes(Context context, AttributeSet attrs) {
@@ -117,15 +125,42 @@ public class ElegantTextView extends TextView implements StyleContext {
     }
 
 
-    public ElegantTextView filter(String key, Function<CharSequence, CharSequence> function) {
+    public ElegantTextView filter(String key, Function<SpannableString, SpannableString> function) {
         filters.put(key, new ElegantUtils.Filter(function));
         return this;
     }
 
-    public ElegantTextView filter(String key, BiFunction<CharSequence, List<String>, CharSequence> function) {
+    public ElegantTextView filter(String key, BiFunction<SpannableString, List<String>, SpannableString> function) {
         filters.put(key, new ElegantUtils.ArgsFilter(function));
         return this;
     }
+
+    public ElegantTextView addGlobal(String... keys){
+        Collections.addAll(globals, keys);
+        return this;
+    }
+
+    public ElegantTextView removeBindingValue(String key){
+        values.remove(key);
+        return this;
+    }
+
+    public ElegantTextView removeFilter(String key){
+        filters.remove(key);
+        return this;
+    }
+
+    public ElegantTextView removeGlobal(String key){
+        globals.remove(key);
+        return this;
+    }
+
+    public ElegantTextView bindingPoints(String startPoint, String endPoint) {
+        this.startPoint = startPoint;
+        this.endPoint = endPoint;
+        return this;
+    }
+
 
     public ElegantTextView apply() {
         if(mTemplate.isEmpty())return this;
@@ -133,13 +168,33 @@ public class ElegantTextView extends TextView implements StyleContext {
         SpannableStringBuilder builder = new SpannableStringBuilder();
         builder.append(mTemplate);
 
-        builder = Stream.of(values).reduce(builder, (memo, entry) -> {
+        builder = buildBinding(builder);
+
+        builder=buildGlobal(builder);
+
+        setText(builder, BufferType.SPANNABLE);
+        return this;
+
+    }
+
+    private SpannableStringBuilder buildGlobal(SpannableStringBuilder builder) {
+        SpannableStringBuilder newBuilder=new SpannableStringBuilder();
+
+        CharSequence result=Stream.of(globals).reduce(builder, this::applyFilter);
+
+        newBuilder.append(result);
+
+        return newBuilder;
+    }
+
+    private SpannableStringBuilder buildBinding(SpannableStringBuilder builder) {
+       return Stream.of(values).reduce(builder, (memo, entry) -> {
 
             String key = entry.getKey();
 
             CharSequence value = entry.getValue().applyFilters(this);
 
-            String pattern = "{" + key + "}";
+            String pattern = buildBindingPattern(key);
 
             int start = mTemplate.indexOf(pattern);
 
@@ -149,25 +204,25 @@ public class ElegantTextView extends TextView implements StyleContext {
 
             return memo.replace(start, end, value);
         });
+    }
 
-        setText(builder);
-        return this;
-
+    private String buildBindingPattern(String key) {
+        return startPoint+key+endPoint;
     }
 
 
     @Override
-    public CharSequence applyFilter(String key, CharSequence value) {
+    public SpannableString applyFilter(CharSequence value, String key) {
         String realKey=key;
+        SpannableString result=new SpannableString(value);
+
         ArrayList<String> args=new ArrayList<>();
         if(key.contains(":")){
             String[] elems=key.split(":");
             realKey=elems[0];
             Collections.addAll(args, elems[1].split(","));
         }
-
-        CharSequence result=value;
-
+        
         if(filters.containsKey(realKey)){
             ElegantUtils.AbstractFilter filter=filters.get(realKey);
 
@@ -175,10 +230,10 @@ public class ElegantTextView extends TextView implements StyleContext {
 
                 result=((ElegantUtils.ArgsFilter)filter)
                         .getFunction()
-                        .apply(value, args);
+                        .apply(result, args);
             }else{
                 if(filter instanceof ElegantUtils.Filter){
-                    result=((ElegantUtils.Filter)filter).getFunction().apply(value);
+                    result=((ElegantUtils.Filter)filter).getFunction().apply(result);
                 }
             }
         }
