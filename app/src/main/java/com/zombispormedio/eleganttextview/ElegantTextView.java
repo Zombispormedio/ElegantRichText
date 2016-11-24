@@ -34,8 +34,6 @@ public class ElegantTextView extends TextView implements StyleContext {
 
     private HashSet<String> filtersToCompoundInValues;
 
-    private LinkedHashMap<String, ElegantUtils.AbstractFilter> filters;
-
     private HashSet<String> globals;
 
     public ElegantTextView(Context context, AttributeSet attrs) {
@@ -44,23 +42,12 @@ public class ElegantTextView extends TextView implements StyleContext {
 
         values = new LinkedHashMap<>();
 
-        filters = new LinkedHashMap<>();
-
         globals = new HashSet<>();
 
         filtersToCompoundInValues = new HashSet<>();
 
-        configureDefaultFilters();
-
     }
 
-    private void configureDefaultFilters() {
-        filter(ElegantUtils.Style.BOLD, ElegantUtils::bold);
-        filter(ElegantUtils.Style.FOREGROUND_COLOR, ElegantUtils::foregroundColor);
-        filter(ElegantUtils.Style.BACKGROUND_COLOR, ElegantUtils::backgroundColor);
-
-        filter(ElegantUtils.Style.TEXT_CENTER, ElegantUtils::centerText);
-    }
 
     private void obtainAttributes(Context context, AttributeSet attrs) {
 
@@ -128,16 +115,6 @@ public class ElegantTextView extends TextView implements StyleContext {
     }
 
 
-    public ElegantTextView filter(String key, Function<SpannableString, SpannableString> function) {
-        filters.put(key, new ElegantUtils.Filter(function));
-        return this;
-    }
-
-    public ElegantTextView filter(String key, BiFunction<SpannableString, List<String>, SpannableString> function) {
-        filters.put(key, new ElegantUtils.ArgsFilter(function));
-        return this;
-    }
-
     public ElegantTextView addGlobal(String... keys) {
         Collections.addAll(globals, keys);
         return this;
@@ -146,17 +123,11 @@ public class ElegantTextView extends TextView implements StyleContext {
     public ElegantTextView compose(ElegantUtils.StyleCompound compound) {
         filtersToCompoundInValues.addAll(compound.getStyles());
         globals.addAll(compound.getGlobalStyles());
-        filters.putAll(compound.getCustomStyles());
         return this;
     }
 
     public ElegantTextView removeBindingValue(String key) {
         values.remove(key);
-        return this;
-    }
-
-    public ElegantTextView removeFilter(String key) {
-        filters.remove(key);
         return this;
     }
 
@@ -235,8 +206,9 @@ public class ElegantTextView extends TextView implements StyleContext {
             Collections.addAll(args, elems[1].split(","));
         }
 
-        if (filters.containsKey(realKey)) {
-            ElegantUtils.AbstractFilter filter = filters.get(realKey);
+        ElegantStyleManager manager=ElegantStyleManager.getInstance();
+        if (manager.haveFilter(realKey)) {
+            ElegantUtils.AbstractFilter filter = manager.getFilter(realKey);
 
             if (args.size() > 0 && filter instanceof ElegantUtils.ArgsFilter) {
 
