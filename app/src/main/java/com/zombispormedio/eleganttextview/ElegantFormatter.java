@@ -17,6 +17,23 @@ public class ElegantFormatter {
 
     private String endPoint=defaultEndPoint;
 
+    private LinkedHashMap<String,ArrayList<int[]>> positions;
+
+    private String raw;
+
+
+    public ElegantFormatter(String raw, String startPoint, String endPoint) {
+        this.raw=raw;
+        this.startPoint = startPoint;
+        this.endPoint = endPoint;
+        this.positions=new LinkedHashMap<>();
+    }
+
+    public ElegantFormatter(String raw) {
+        this.raw=raw;
+        this.positions=new LinkedHashMap<>();
+    }
+
     public void setStartPoint(String startPoint) {
         this.startPoint = startPoint;
     }
@@ -25,10 +42,25 @@ public class ElegantFormatter {
         this.endPoint = endPoint;
     }
 
-    public LinkedHashMap<String, ArrayList<int[]>> resolveBindingLocation(String raw){
-        LinkedHashMap<String, ArrayList<int[]>> locations=new LinkedHashMap<>();
-        
+    public void setRaw(String raw) {
+        this.raw = raw;
+        resolveBindingLocations();
+    }
 
-        return locations;
+    public void resolveBindingLocations(){
+        positions.clear();
+
+        StringBuilder maker=new StringBuilder(raw);
+
+        int startPosition=maker.indexOf(startPoint);
+
+        while(startPosition>-1){
+
+        }
+
+    }
+
+    public LinkedHashMap<String, ArrayList<int[]>> getPositions() {
+        return positions;
     }
 }
