@@ -80,4 +80,11 @@ public class ElegantFormatterTest {
 
     }
 
+    @Test
+    public void testJoiner(){
+        ElegantFormatter.Joiner joiner=new ElegantFormatter.Joiner(", ", " y ", "y ");
+
+        assertEquals("el, ella, y yo", joiner.join("el", "ella", "yo").toString());
+    }
+
 }
