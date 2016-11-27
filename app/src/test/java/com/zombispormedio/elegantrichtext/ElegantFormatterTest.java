@@ -22,69 +22,35 @@ public class ElegantFormatterTest {
 
     public final String firstString="Hola, {name}, Lorem ipsum dolor sit amet, consectetur adipiscin" +
             "g elit. Integer eget tortor velit. {name} tincidunt consectetur pharetra. Ut tem" +
-            "por lacinia urna commodo blandit. {hello} ac nibh augue. Sed ornare erat hendrerit posuere porta.";
+            "por lacinia urna commodo blandit. {hello} ac nibh augue. Sed {list} erat hendrerit posuere porta.";
 
 
-    @Test
-    public void resolveBindingPositions(){
 
-        final ElegantFormatter formatter=new ElegantFormatter(firstString);
-
-        assertEquals(2, formatter.getPositions().size());
-
-        HashMap<String, ArrayList<int[]>> expectedPositions=mockExpectedPositions();
-
-        HashMap<String, ArrayList<int[]>> testPositions=formatter.getPositions();
-
-        for (String k:expectedPositions.keySet()) {
-
-            assertTrue(testPositions.containsKey(k));
-
-            ArrayList<int[]> expected=expectedPositions.get(k);
-            ArrayList<int[]> test=testPositions.get(k);
-
-            assertEquals(expected.size(), test.size());
-
-            for(int i=0; i< test.size();i++){
-                int [] p=test.get(i);
-                assertEquals(k, firstString.substring(p[0]+1, p[1]));
-            }
-        }
-
-    }
-
-    private HashMap<String, ArrayList<int[]>> mockExpectedPositions(){
-        HashMap<String, ArrayList<int[]>> expectedPositions=new HashMap<>();
-        ArrayList<int[]> namePositions=new ArrayList<>();
-        namePositions.add(new int[]{6, 11});
-        namePositions.add(new int[]{});
-        expectedPositions.put("name", namePositions);
-
-        ArrayList<int[]> helloPositions=new ArrayList<>();
-        helloPositions.add(new int[]{});
-        expectedPositions.put("hello", helloPositions);
-        return expectedPositions;
-    }
 
     @Test
     public void testApply(){
         final ElegantFormatter formatter=new ElegantFormatter(firstString);
+        ArrayList<CharSequence> list=new ArrayList<>();
+        list.add("hola1");
+        list.add("hola2");
+        list.add("hola3");
 
         String result=formatter.put("name", "Xavier")
                 .put("hello", "Bienvenido")
+                .put("list", list, new ElegantFormatter.Joiner(", ", " y ", " y "))
                 .apply().toString();
 
         assertEquals("Hola, Xavier, Lorem ipsum dolor sit amet, consectetur adipiscin" +
                 "g elit. Integer eget tortor velit. Xavier tincidunt consectetur pharetra. Ut tem" +
-                "por lacinia urna commodo blandit. Bienvenido ac nibh augue. Sed ornare erat hendrerit posuere porta.", result);
+                "por lacinia urna commodo blandit. Bienvenido ac nibh augue. Sed hola1, hola2 y hola3 erat hendrerit posuere porta.", result);
 
     }
 
     @Test
     public void testJoiner(){
-        ElegantFormatter.Joiner joiner=new ElegantFormatter.Joiner(", ", " y ", "y ");
+        ElegantFormatter.Joiner joiner=new ElegantFormatter.Joiner(", ", " y ", " y ");
 
-        assertEquals("el, ella, y yo", joiner.join("el", "ella", "yo").toString());
+        assertEquals("el, ella y yo", joiner.join("el", "ella", "yo").toString());
     }
 
 }

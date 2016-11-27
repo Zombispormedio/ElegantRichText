@@ -1,5 +1,6 @@
 package com.zombispormedio.elegantrichtext;
 
+import android.graphics.Paint;
 import android.text.SpannableStringBuilder;
 
 import com.annimon.stream.Stream;
@@ -25,9 +26,9 @@ public class ElegantFormatter {
 
     private String endPoint = defaultEndPoint;
 
-    private HashMap<String, ArrayList<int[]>> positions;
+    private HashMap<String, Value> values;
 
-    private HashMap<String, CharSequence> values;
+    private Joiner globalJoiner;
 
     private String raw;
 
@@ -36,16 +37,18 @@ public class ElegantFormatter {
         this.raw = raw;
         this.startPoint = startPoint;
         this.endPoint = endPoint;
-        this.positions = new HashMap<>();
-        this.values = new HashMap<>();
-        resolve();
+        setup();
     }
+
 
     public ElegantFormatter(String raw) {
         this.raw = raw;
-        this.positions = new LinkedHashMap<>();
+        setup();
+    }
+
+    private void setup() {
         this.values = new HashMap<>();
-        resolve();
+        this.globalJoiner = new Joiner(", ", " and ", ", and");
     }
 
     public ElegantFormatter setPoints(String startPoint, String endPoint) {
@@ -59,67 +62,57 @@ public class ElegantFormatter {
         return this;
     }
 
-    public ElegantFormatter resolve() {
-        positions.clear();
+    public SpannableStringBuilder apply() {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
 
         StringBuilder maker = new StringBuilder(raw);
 
         int startPosition = maker.indexOf(startPoint);
 
-        int offset = 0;
+
 
         while (startPosition > -1) {
             int endPosition = maker.indexOf(endPoint);
 
             String key = maker.substring(startPosition + 1, endPosition).trim();
 
-            int realStartPosition = startPosition + offset;
-            int realEndPosition = endPosition + offset;
+            String rest =maker.substring(0, startPosition);
 
-            int[] loc = new int[]{realStartPosition, realEndPosition};
-            if (positions.containsKey(key)) {
-                positions.get(key).add(loc);
+            builder.append(rest);
 
-            } else {
-                ArrayList<int[]> keyPositions = new ArrayList<>();
-                keyPositions.add(loc);
-                positions.put(key, keyPositions);
-            }
+            CharSequence bindingValue=values.get(key).getValue();
 
-            maker = new StringBuilder(maker.substring(endPosition + 1));
+            builder.append(bindingValue);
 
-            offset += endPosition + 1;
+
+            maker = new StringBuilder(maker.substring(endPosition+1));
 
             startPosition = maker.indexOf(startPoint);
 
         }
 
+        builder.append(maker);
 
-        return this;
+        return builder;
 
     }
+
 
     public ElegantFormatter put(String key, CharSequence value) {
-        values.put(key, value);
+        values.put(key, new CharSequenceValue(value));
         return this;
     }
 
-    public HashMap<String, ArrayList<int[]>> getPositions() {
-        return positions;
+    public ElegantFormatter put(String key, ArrayList<CharSequence> value) {
+        values.put(key, new ListCharSequenceValue(value, globalJoiner));
+        return this;
     }
 
-    public SpannableStringBuilder apply() {
-        SpannableStringBuilder builder = new SpannableStringBuilder(raw);
-
-        return Stream.of(positions.keySet())
-                .reduce(builder, (memo, key) -> {
-                    CharSequence v = values.get(key);
-
-                    return Stream.of(positions.get(key))
-                            .reduce(memo, bindFunction(v));
-                });
-
+    public ElegantFormatter put(String key, ArrayList<CharSequence> value, Joiner joiner) {
+        values.put(key, new ListCharSequenceValue(value, joiner));
+        return this;
     }
+
 
 
     private BiFunction<SpannableStringBuilder, int[], SpannableStringBuilder> bindFunction(CharSequence value) {
@@ -127,7 +120,17 @@ public class ElegantFormatter {
     }
 
 
-    private abstract class Value<V> {
+    public ElegantFormatter setGlobalJoiner(Joiner globalJoiner) {
+        this.globalJoiner = globalJoiner;
+        return this;
+    }
+
+    public ElegantFormatter setGlobalJoiner(String between, String two, String moreThanTwo) {
+        this.globalJoiner = new Joiner(between, two, moreThanTwo);
+        return this;
+    }
+
+    private abstract class Value<V extends CharSequence> {
         private V value;
 
         public Value(V value) {
@@ -137,19 +140,41 @@ public class ElegantFormatter {
         public V getValue() {
             return value;
         }
+
+        public void setValue(V value) {
+            this.value = value;
+        }
     }
 
-    private class CharSequenceValue extends Value<CharSequence> {
+    private class CharSequenceValue extends Value<CharSequence>{
 
         public CharSequenceValue(CharSequence value) {
             super(value);
         }
+
     }
 
-    private class ListCharSequenceValue extends Value<ArrayList<CharSequence>> {
+    private class ListCharSequenceValue extends Value<CharSequence> {
 
-        public ListCharSequenceValue(ArrayList<CharSequence> value) {
-            super(value);
+
+        private ArrayList<CharSequence> values;
+        private Joiner joiner;
+
+        public ListCharSequenceValue(ArrayList<CharSequence> values, Joiner joiner) {
+            super(joiner.join(values));
+            this.values=values;
+            this.joiner=joiner;
+        }
+
+        public void setValues(ArrayList<CharSequence> values) {
+            this.values = values;
+            setValue(joiner.join(values));
+        }
+
+
+        public void setJoiner(Joiner joiner) {
+            this.joiner = joiner;
+            setValue(joiner.join(values));
         }
     }
 
@@ -194,13 +219,17 @@ public class ElegantFormatter {
         private SpannableStringBuilder joinMoreThanTwo(List<CharSequence> elems) {
             SpannableStringBuilder builder = new SpannableStringBuilder();
 
-            int last=elems.size()-1;
-            for(int i=0; i<last; i++){
-                builder=builder.append(elems.get(i))
+            int len = elems.size() ;
+            int last=len-1;
+            int penultimate=len-2;
+
+            for (int i = 0; i < penultimate; i++) {
+                builder = builder.append(elems.get(i))
                         .append(betweenElements);
             }
 
             return builder
+                    .append(elems.get(penultimate))
                     .append(moreThanTwoElements)
                     .append(elems.get(last));
         }
