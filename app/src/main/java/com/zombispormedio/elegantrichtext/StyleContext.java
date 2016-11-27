@@ -1,8 +1,6 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
 import android.text.SpannableString;
-
-import java.util.function.Function;
 
 /**
  * Created by xavierserrano on 23/11/16.

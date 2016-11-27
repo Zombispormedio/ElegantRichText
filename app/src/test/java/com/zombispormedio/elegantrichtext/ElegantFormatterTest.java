@@ -1,4 +1,4 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
 /**
  * Created by xavierserrano on 26/11/16.

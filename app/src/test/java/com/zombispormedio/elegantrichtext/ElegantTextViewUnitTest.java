@@ -1,7 +1,5 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
-
-import android.widget.TextView;
 
 import org.junit.Test;
 

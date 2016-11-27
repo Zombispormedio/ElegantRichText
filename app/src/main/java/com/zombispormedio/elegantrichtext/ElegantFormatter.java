@@ -1,4 +1,4 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
 import android.text.SpannableStringBuilder;
 

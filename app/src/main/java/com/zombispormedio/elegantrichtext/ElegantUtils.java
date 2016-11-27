@@ -1,4 +1,4 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
 import android.graphics.Color;
 import android.graphics.Typeface;

@@ -1,4 +1,4 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

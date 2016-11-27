@@ -1,4 +1,4 @@
-package com.zombispormedio.eleganttextview;
+package com.zombispormedio.elegantrichtext;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -8,14 +8,11 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 import com.annimon.stream.Stream;
-import com.annimon.stream.function.BiFunction;
-import com.annimon.stream.function.Function;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 
 /**

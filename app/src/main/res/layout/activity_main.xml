@@ -9,15 +9,15 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.zombispormedio.eleganttextview.MainActivity">
+    tools:context="com.zombispormedio.elegantrichtext.MainActivity">
 
-    <com.zombispormedio.eleganttextview.ElegantTextView
+    <com.zombispormedio.elegantrichtext.ElegantTextView
         android:id="@+id/text"
         custom:template="@string/lorem_ipsum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.zombispormedio.eleganttextview.ElegantTextView
+    <com.zombispormedio.elegantrichtext.ElegantTextView
         android:layout_below="@+id/text"
         android:id="@+id/text2"
         custom:template="Hello World [name]"
