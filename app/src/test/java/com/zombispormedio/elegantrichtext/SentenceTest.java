@@ -12,13 +12,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
-public class ElegantFormatterTest {
+public class SentenceTest {
 
     public final String firstString="Hola, {name}, Lorem ipsum dolor sit amet, consectetur adipiscin" +
             "g elit. Integer eget tortor velit. {name} tincidunt consectetur pharetra. Ut tem" +
@@ -29,7 +28,7 @@ public class ElegantFormatterTest {
 
     @Test
     public void testApply(){
-        final ElegantFormatter formatter=new ElegantFormatter(firstString);
+        final Sentence formatter=new Sentence(firstString);
         ArrayList<CharSequence> list=new ArrayList<>();
         list.add("hola1");
         list.add("hola2");
@@ -37,7 +36,7 @@ public class ElegantFormatterTest {
 
         String result=formatter.put("name", "Xavier")
                 .put("hello", "Bienvenido")
-                .put("list", list, new ElegantFormatter.Joiner(", ", " y ", " y "))
+                .put("list", list, new Sentence.Joiner(", ", " y ", " y "))
                 .apply().toString();
 
         assertEquals("Hola, Xavier, Lorem ipsum dolor sit amet, consectetur adipiscin" +
@@ -48,7 +47,7 @@ public class ElegantFormatterTest {
 
     @Test
     public void testJoiner(){
-        ElegantFormatter.Joiner joiner=new ElegantFormatter.Joiner(", ", " y ", " y ");
+        Sentence.Joiner joiner=new Sentence.Joiner(", ", " y ", " y ");
 
         assertEquals("el, ella y yo", joiner.join("el", "ella", "yo").toString());
     }

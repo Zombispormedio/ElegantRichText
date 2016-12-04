@@ -23,24 +23,15 @@ import java.util.List;
 
 public class ElegantUtils {
 
-    public static class Style {
+    public interface WithStyle<T> {
 
-        public static final String BOLD = "bold";
+        T bold();
 
-        public static final String FOREGROUND_COLOR = "foreground_color";
+        T foregroundColor(String hex);
 
-        public static String foregroundColor(String hex) {
-            return FOREGROUND_COLOR + ":" + hex;
-        }
+        T backgroundColor(String hex);
 
-        public static final String BACKGROUND_COLOR = "background_color";
-
-        public static String backgroundColor(String hex) {
-            return BACKGROUND_COLOR + ":" + hex;
-        }
-
-        public static final String TEXT_CENTER="text_center";
-
+        T textCenter();
     }
 
 
@@ -97,7 +88,7 @@ public class ElegantUtils {
         }
     }
 
-    public static class StyleCompound{
+    public static class StyleCompound implements WithStyle<StyleCompound>{
         private HashSet<String> styles;
 
         private HashSet<String> globalStyles;
@@ -105,27 +96,27 @@ public class ElegantUtils {
         private LinkedHashMap<String, AbstractFilter> customStyles;
 
         public StyleCompound() {
-            styles=new HashSet<>();
-            globalStyles=new HashSet<>();
-            customStyles=new LinkedHashMap<>();
+            styles = new HashSet<>();
+            globalStyles = new HashSet<>();
+            customStyles = new LinkedHashMap<>();
         }
 
-        public StyleCompound addStyles(String... keys){
+        public StyleCompound addStyles(String... keys) {
             Collections.addAll(styles, keys);
             return this;
         }
 
-        public StyleCompound addGlobalStyles(String... keys){
+        public StyleCompound addGlobalStyles(String... keys) {
             Collections.addAll(globalStyles, keys);
             return this;
         }
 
-        public StyleCompound addCustomStyle(String key, Function<SpannableString, SpannableString> fn){
+        public StyleCompound addCustomStyle(String key, Function<SpannableString, SpannableString> fn) {
             customStyles.put(key, new Filter(fn));
             return this;
         }
 
-        public StyleCompound addCustomStyle(String key, BiFunction<SpannableString, List<String>, SpannableString> fn){
+        public StyleCompound addCustomStyle(String key, BiFunction<SpannableString, List<String>, SpannableString> fn) {
             customStyles.put(key, new ArgsFilter(fn));
             return this;
         }
@@ -140,6 +131,46 @@ public class ElegantUtils {
 
         public LinkedHashMap<String, AbstractFilter> getCustomStyles() {
             return customStyles;
+        }
+
+        public StyleCompound bold(){
+            addStyles(ElegantStyleManager.Style.BOLD);
+            return this;
+        }
+
+        public StyleCompound foregroundColor(String hex){
+            addStyles(ElegantStyleManager.Style.foregroundColor(hex));
+            return this;
+        }
+
+        public StyleCompound backgroundColor(String hex){
+            addStyles(ElegantStyleManager.Style.backgroundColor(hex));
+            return this;
+        }
+
+        public StyleCompound textCenter(){
+            addStyles(ElegantStyleManager.Style.TEXT_CENTER);
+            return this;
+        }
+
+        public StyleCompound boldGlobal(){
+            addGlobalStyles(ElegantStyleManager.Style.BOLD);
+            return this;
+        }
+
+        public StyleCompound foregroundColorGlobal(String hex){
+            addGlobalStyles(ElegantStyleManager.Style.foregroundColor(hex));
+            return this;
+        }
+
+        public StyleCompound backgroundColorGlobal(String hex){
+            addGlobalStyles(ElegantStyleManager.Style.backgroundColor(hex));
+            return this;
+        }
+
+        public StyleCompound textCenterGlobal(){
+            addGlobalStyles(ElegantStyleManager.Style.TEXT_CENTER);
+            return this;
         }
     }
 }

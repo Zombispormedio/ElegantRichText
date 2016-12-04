@@ -5,13 +5,37 @@ import android.text.SpannableString;
 import com.annimon.stream.function.BiFunction;
 import com.annimon.stream.function.Function;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
  * Created by xavierserrano on 24/11/16.
  */
-public class ElegantStyleManager {
+public class ElegantStyleManager implements StyleContext {
+
+    public static class Style {
+
+        public static final String BOLD = "bold";
+
+        public static final String FOREGROUND_COLOR = "foreground_color";
+
+        public static String foregroundColor(String hex) {
+            return FOREGROUND_COLOR + ":" + hex;
+        }
+
+        public static final String BACKGROUND_COLOR = "background_color";
+
+        public static String backgroundColor(String hex) {
+            return BACKGROUND_COLOR + ":" + hex;
+        }
+
+        public static final String TEXT_CENTER="text_center";
+
+    }
+
+
     private static ElegantStyleManager ourInstance = new ElegantStyleManager();
 
     public static ElegantStyleManager getInstance() {
@@ -32,10 +56,10 @@ public class ElegantStyleManager {
     }
 
     private void configureDefaultFilters() {
-        addDefaultFilter(ElegantUtils.Style.BOLD, ElegantUtils::bold);
-        addDefaultFilter(ElegantUtils.Style.FOREGROUND_COLOR, ElegantUtils::foregroundColor);
-        addDefaultFilter(ElegantUtils.Style.BACKGROUND_COLOR, ElegantUtils::backgroundColor);
-        addDefaultFilter(ElegantUtils.Style.TEXT_CENTER, ElegantUtils::centerText);
+        addDefaultFilter(Style.BOLD, ElegantUtils::bold);
+        addDefaultFilter(Style.FOREGROUND_COLOR, ElegantUtils::foregroundColor);
+        addDefaultFilter(Style.BACKGROUND_COLOR, ElegantUtils::backgroundColor);
+        addDefaultFilter(Style.TEXT_CENTER, ElegantUtils::centerText);
     }
 
     private void addDefaultFilter(String key, Function<SpannableString, SpannableString> function) {
@@ -83,5 +107,34 @@ public class ElegantStyleManager {
 
     public boolean haveFilter(String key){
         return defaultFilters.containsKey(key) || customFilters.containsKey(key);
+    }
+
+
+    @Override
+    public SpannableString applyFilter(CharSequence value, String key) {
+        String realKey = key;
+        SpannableString result = new SpannableString(value);
+        ArrayList<String> args = new ArrayList<>();
+        if (key.contains(":")) {
+            String[] elems = key.split(":");
+            realKey = elems[0];
+            Collections.addAll(args, elems[1].split(","));
+        }
+
+        if (haveFilter(realKey)) {
+            ElegantUtils.AbstractFilter filter = getFilter(realKey);
+
+            if (args.size() > 0 && filter instanceof ElegantUtils.ArgsFilter) {
+
+                result = ((ElegantUtils.ArgsFilter) filter)
+                        .getFunction()
+                        .apply(result, args);
+            } else {
+                if (filter instanceof ElegantUtils.Filter) {
+                    result = ((ElegantUtils.Filter) filter).getFunction().apply(result);
+                }
+            }
+        }
+        return result;
     }
 }

@@ -3,32 +3,32 @@ package com.zombispormedio.elegantrichtext;
 import android.text.SpannableString;
 
 import com.annimon.stream.Stream;
-import com.annimon.stream.function.Predicate;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by xavierserrano on 23/11/16.
+ * Created by xavierserrano on 4/12/16.
  */
 
-public class StyleableValue {
+public class StyleableValue implements Styleable<SpannableString>{
 
     private SpannableString value;
 
     private Set<String> styles;
 
-    private Predicate<SpannableString> onClick;
+    public StyleableValue(CharSequence value) {
+        this.value=new SpannableString(value);
+        this.styles=new HashSet<>();
+    }
 
     public StyleableValue() {
         this.styles=new HashSet<>();
-        this.value=new SpannableString("");
     }
 
-    public StyleableValue(CharSequence value) {
-        this.value = new SpannableString(value);
-        this.styles=new HashSet<>();
+    public void setValue(CharSequence value) {
+        this.value=new SpannableString(value);
     }
 
     public void addStyle(String... s){
@@ -39,23 +39,32 @@ public class StyleableValue {
         styles.addAll(s);
     }
 
-    public CharSequence getValue() {
-        return value;
-    }
-
     public Set<String> getStyles() {
         return styles;
     }
 
-    public void setValue(CharSequence value) {
-        this.value = new SpannableString(value);
+    @Override
+    public SpannableString applyStyles() {
+        return Stream.of(styles).reduce(value, ElegantStyleManager.getInstance()::applyFilter);
     }
 
-    public SpannableString applyFilters(StyleContext ctx){
-        return Stream.of(styles).reduce(value, ctx::applyFilter);
+    public StyleableValue bold(){
+        addStyle(ElegantStyleManager.Style.BOLD);
+        return this;
     }
 
-    public StyleableValue(Predicate<SpannableString> onClick) {
-        this.onClick = onClick;
+    public StyleableValue foregroundColor(String hex){
+        addStyle(ElegantStyleManager.Style.foregroundColor(hex));
+        return this;
+    }
+
+    public StyleableValue backgroundColor(String hex){
+        addStyle(ElegantStyleManager.Style.backgroundColor(hex));
+        return this;
+    }
+
+    public StyleableValue textCenter(){
+        addStyle(ElegantStyleManager.Style.TEXT_CENTER);
+        return this;
     }
 }
